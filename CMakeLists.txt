@@ -128,8 +128,8 @@ set(4.advanced_opengl
     10.1.instancing_quads
     10.2.asteroids
     10.3.asteroids_instanced
+    10.4.dots
     11.anti_aliasing_offscreen
-    dots
 )
 
 set(5.advanced_lighting

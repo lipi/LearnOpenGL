@@ -74,10 +74,15 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
+    // blend
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+
+
     // build and compile shaders
     // -------------------------
-    Shader asteroidShader("10.3.asteroids.vs", "10.3.asteroids.fs");
-    Shader planetShader("10.3.planet.vs", "10.3.planet.fs");
+    Shader asteroidShader("10.4.asteroids.vs", "10.4.asteroids.fs");
+    Shader planetShader("10.4.planet.vs", "10.4.planet.fs");
 
     // load models
     // -----------
@@ -188,7 +193,7 @@ int main()
 
         // draw meteorites
         asteroidShader.use();
-        asteroidShader.setInt("texture_diffuse1", 0);
+        asteroidShader.setInt("texture1", 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, rock.textures_loaded[0].id); // note: we also made the textures_loaded vector public (instead of private) from the model class.
         for (unsigned int i = 0; i < rock.meshes.size(); i++)

@@ -23,7 +23,7 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // camera
-Camera camera(glm::vec3(0.0f, 200.0f, 155.0f));
+Camera camera(glm::vec3(0.0f, 150.0f, 100.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -79,13 +79,11 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader asteroidShader("10.4.asteroids.vs", "10.4.asteroids.fs");
-    Shader planetShader("10.4.planet.vs", "10.4.planet.fs");
+    Shader dotShader("dots.vs", "dots.fs");
 
     // load models
     // -----------
-    Model rock(FileSystem::getPath("resources/objects/dot/dot.obj"));
-    Model planet(FileSystem::getPath("resources/objects/dot/dot.obj"));
+    Model dot(FileSystem::getPath("resources/objects/dot/dot.obj"));
 
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
@@ -103,18 +101,9 @@ int main()
         float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         float x = sin(angle) * radius + displacement;
         displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y = 0.0 ; //displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float z = cos(angle) * radius + displacement;
+        float y = cos(angle) * radius + displacement;
+        float z = 0.0 ; //displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
         model = glm::translate(model, glm::vec3(x, y, z));
-
-        // 2. scale: Scale between 0.05 and 0.25f
-//        float scale = (rand() % 20) / 100.0f + 0.05;
-//        model = glm::scale(model, glm::vec3(scale));
-
-        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
-//        float rotAngle = (rand() % 360);
-//        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
 
         // 4. now add to list of matrices
         modelMatrices[i] = model;
@@ -131,9 +120,9 @@ int main()
     // note: we're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
     // normally you'd want to do this in a more organized fashion, but for learning purposes this will do.
     // -----------------------------------------------------------------------------------------------------------------------------------
-    for (unsigned int i = 0; i < rock.meshes.size(); i++)
+    for (unsigned int i = 0; i < dot.meshes.size(); i++)
     {
-        unsigned int VAO = rock.meshes[i].VAO;
+        unsigned int VAO = dot.meshes[i].VAO;
         glBindVertexArray(VAO);
         // set attribute pointers for matrix (4 times vec4)
         glEnableVertexAttribArray(3);
@@ -175,29 +164,19 @@ int main()
         // configure transformation matrices
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        asteroidShader.use();
-        asteroidShader.setMat4("projection", projection);
-        asteroidShader.setMat4("view", view);
-        planetShader.use();
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
+        dotShader.use();
+        dotShader.setMat4("projection", projection);
+        dotShader.setMat4("view", view);
         
-        // draw planet
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        planetShader.setMat4("model", model);
-        planet.Draw(planetShader);
-
-        // draw meteorites
-        asteroidShader.use();
-        asteroidShader.setInt("texture1", 0);
+        // draw dots
+        dotShader.use();
+        dotShader.setInt("texture1", 0);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, rock.textures_loaded[0].id); // note: we also made the textures_loaded vector public (instead of private) from the model class.
-        for (unsigned int i = 0; i < rock.meshes.size(); i++)
+        glBindTexture(GL_TEXTURE_2D, dot.textures_loaded[0].id); // note: we also made the textures_loaded vector public (instead of private) from the model class.
+        for (unsigned int i = 0; i < dot.meshes.size(); i++)
         {
-            glBindVertexArray(rock.meshes[i].VAO);
-            glDrawElementsInstanced(GL_TRIANGLES, rock.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
+            glBindVertexArray(dot.meshes[i].VAO);
+            glDrawElementsInstanced(GL_TRIANGLES, dot.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
             glBindVertexArray(0);
         }
 

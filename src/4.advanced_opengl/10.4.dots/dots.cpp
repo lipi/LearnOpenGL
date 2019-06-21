@@ -6,12 +6,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "spdlog/spdlog.h"
+
 #include <learnopengl/filesystem.h>
 #include <learnopengl/shader.h>
 #include <learnopengl/camera.h>
 #include <learnopengl/model.h>
 
 #include <iostream>
+
+#include "FrameProvider.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -34,6 +38,8 @@ float lastFrame = 0.0f;
 
 int main()
 {
+    spdlog::set_level(spdlog::level::debug); // Set global log level to debug
+    
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -88,25 +94,25 @@ int main()
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
     unsigned int amount = 100000;
-    glm::mat4* modelMatrices;
-    modelMatrices = new glm::mat4[amount];
+    glm::vec3* positionVectors;
+    positionVectors = new glm::vec3[amount];
     srand(glfwGetTime()); // initialize random seed	
     float radius = 150.0;
     float offset = 25.0f;
     for (unsigned int i = 0; i < amount; i++)
     {
-        glm::mat4 model = glm::mat4(1.0f);
-        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+        glm::vec3 pos = glm::vec3(1.0f);
+        // translation: displace along circle with 'radius' in range [-offset, offset]
         float angle = (float)i / (float)amount * 360.0f;
         float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         float x = sin(angle) * radius + displacement;
         displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         float y = cos(angle) * radius + displacement;
-        float z = 0.0 ; //displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
-        model = glm::translate(model, glm::vec3(x, y, z));
+        float z = 0.0;
+        pos = glm::vec3(x, y, z);
 
-        // 4. now add to list of matrices
-        modelMatrices[i] = model;
+        // add to list of matrices
+        positionVectors[i] = pos;
     }
 
     // configure instanced array
@@ -114,7 +120,7 @@ int main()
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::mat4), &modelMatrices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::vec3), &positionVectors[0], GL_STATIC_DRAW);
 
     // set transformation matrices as an instance vertex attribute (with divisor 1)
     // note: we're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
@@ -124,28 +130,32 @@ int main()
     {
         unsigned int VAO = dot.meshes[i].VAO;
         glBindVertexArray(VAO);
-        // set attribute pointers for matrix (4 times vec4)
+        // set attribute pointers for vec3
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 
         glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
-        glVertexAttribDivisor(6, 1);
 
         glBindVertexArray(0);
     }
 
+    FrameProvider frameProvider("frames.db");
+    std::vector<uint32_t> timestamps = frameProvider.GetTimestamps();
+    uint32_t frameIndex = 0;
+
+
+    
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+
+        spdlog::debug("Loading frame %u at %u", frameIndex, timestamps[frameIndex]);
+        size_t size = frameProvider.GetFrame(timestamps[0], positionVectors, amount);
+        spdlog::debug("Loaded %zu locations from frame %u", size, timestamps[0] );
+        frameIndex++;
+        frameIndex %= timestamps.size();
+
         // per-frame time logic
         // --------------------
         float currentFrame = glfwGetTime();

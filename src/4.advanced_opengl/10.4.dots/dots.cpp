@@ -23,7 +23,7 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 155.0f));
+Camera camera(glm::vec3(0.0f, 200.0f, 155.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -72,13 +72,9 @@ int main()
 
     // configure global opengl state
     // -----------------------------
-    glEnable(GL_DEPTH_TEST);
-
     // blend
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
-    //glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-    //glBlendFunc(GL_ONE, GL_ONE);
 
 
     // build and compile shaders
@@ -107,7 +103,7 @@ int main()
         float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         float x = sin(angle) * radius + displacement;
         displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y = 0; //displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
+        float y = 0.0 ; //displacement * 0.4f; // keep height of asteroid field smaller compared to width of x and z
         displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
         float z = cos(angle) * radius + displacement;
         model = glm::translate(model, glm::vec3(x, y, z));

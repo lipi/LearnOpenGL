@@ -84,8 +84,8 @@ int main()
 
     // load models
     // -----------
-    Model rock(FileSystem::getPath("resources/objects/cube/cube.obj"));
-    Model planet(FileSystem::getPath("resources/objects/cube/cube.obj"));
+    Model rock(FileSystem::getPath("resources/objects/dot/dot.obj"));
+    Model planet(FileSystem::getPath("resources/objects/dot/dot.obj"));
 
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------

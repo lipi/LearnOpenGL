@@ -27,7 +27,7 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // camera
-Camera camera(glm::vec3(0.0f, 150.0f, 100.0f));
+Camera camera(glm::vec3(174.0f, -40, 10.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -96,25 +96,14 @@ int main()
     unsigned int amount = 100000;
     glm::vec3* positionVectors;
     positionVectors = new glm::vec3[amount];
-    srand(glfwGetTime()); // initialize random seed	
-    float radius = 150.0;
-    float offset = 25.0f;
-    for (unsigned int i = 0; i < amount; i++)
-    {
-        glm::vec3 pos = glm::vec3(1.0f);
-        // translation: displace along circle with 'radius' in range [-offset, offset]
-        float angle = (float)i / (float)amount * 360.0f;
-        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float x = sin(angle) * radius + displacement;
-        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
-        float y = cos(angle) * radius + displacement;
-        float z = 0.0;
-        pos = glm::vec3(x, y, z);
 
-        // add to list of matrices
-        positionVectors[i] = pos;
-    }
-
+    FrameProvider frameProvider("frames.db");
+    std::vector<uint32_t> timestamps = frameProvider.GetTimestamps();
+    uint32_t frameIndex = 0;
+    spdlog::debug("Loading frame {} at {}", frameIndex, timestamps[frameIndex]);
+    size_t size = frameProvider.GetFrame(timestamps[0], &positionVectors[0], amount);
+    spdlog::debug("Loaded {} locations from frame {}", size, timestamps[0] );
+    
     // configure instanced array
     // -------------------------
     unsigned int buffer;
@@ -138,21 +127,18 @@ int main()
 
         glBindVertexArray(0);
     }
-
-    FrameProvider frameProvider("frames.db");
-    std::vector<uint32_t> timestamps = frameProvider.GetTimestamps();
-    uint32_t frameIndex = 0;
-
-
     
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
 
-        spdlog::debug("Loading frame %u at %u", frameIndex, timestamps[frameIndex]);
-        size_t size = frameProvider.GetFrame(timestamps[0], positionVectors, amount);
-        spdlog::debug("Loaded %zu locations from frame %u", size, timestamps[0] );
+        unsigned int timestamp = timestamps[frameIndex];
+        spdlog::debug("Loading frame {} at {}", frameIndex, timestamp);
+        void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        size_t size = frameProvider.GetFrame(timestamp, (glm::vec3*)ptr, amount);
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        spdlog::debug("Loaded {} locations from frame {}", size, timestamp);
         frameIndex++;
         frameIndex %= timestamps.size();
 

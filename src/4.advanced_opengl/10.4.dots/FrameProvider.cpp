@@ -13,7 +13,7 @@ FrameProvider::FrameProvider(const char* filename)
       m_TimestampsQuery(m_Db, "SELECT timestamp FROM keyframe"),
       m_FrameQuery(m_Db, "SELECT frame FROM keyframe WHERE timestamp = :timestamp")
 {
-    spdlog::info("Opened %s, found %u frames", filename, (uint32_t)GetTimestamps().size());
+    spdlog::info("Opened {}, found {} frames", filename, (uint32_t)GetTimestamps().size());
 }
 
 std::vector<uint32_t> FrameProvider::GetTimestamps() {
@@ -43,9 +43,9 @@ size_t FrameProvider::GetFrame(uint32_t timestamp, glm::vec3* buffer, size_t num
         }
 
         float* floatData = (float*)blobData;
-         spdlog::debug("converting %zu floats (%zu locations)\n", 2 * numLocations, numLocations);
+         spdlog::debug("converting {} floats ({} locations)", 2 * numLocations, numLocations);
         for (size_t i = 0; i < numLocations; i++) {
-            buffer[i] = glm::vec3(floatData[2 * i], floatData[2 * i+1], 0);
+            buffer[i] = glm::vec3(floatData[2 * i+1], floatData[2 * i], 0);
         }
     }
     m_FrameQuery.clearBindings();

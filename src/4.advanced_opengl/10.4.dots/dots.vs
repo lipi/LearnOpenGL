@@ -7,9 +7,10 @@ out vec2 TexCoords;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform float zoom;
 
 void main()
 {
     TexCoords = aTexCoords;
-    gl_Position = projection * view * vec4(aPos/50.0 + aOffset, 1.0f); 
+    gl_Position = projection * view * vec4(aPos/100 * zoom + aOffset, 1.0f); 
 }
